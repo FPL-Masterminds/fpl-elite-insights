@@ -29,19 +29,22 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
       try {
         const response = await fetch(`/.netlify/functions/check-subscription?email=${encodeURIComponent(user.email!)}`);
         const data = await response.json();
-        setSubStatus(data.active ? "active" : "inactive");
-      } catch (error) {
-        console.error("Subscription check failed", error);
+
+        console.log("🔍 Subscription check response:", data);
+
+        if (data.active) {
+          setSubStatus("active");
+        } else {
+          setSubStatus("inactive");
+        }
+      } catch (err) {
+        console.error("❌ Error checking subscription:", err);
         setSubStatus("inactive");
       }
     };
 
-    if (user && subStatus === "loading") {
-      checkSubscription();
-    } else if (!user && !loading) {
-      setSubStatus("inactive");
-    }
-  }, [user, loading, subStatus]);
+    checkSubscription();
+  }, [user]);
 
   if (loading || subStatus === "loading") {
     return <div>Loading...</div>;
