@@ -15,46 +15,76 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { CheckCircle2 } from "lucide-react";
 
-// Direct payment link from Stripe
+// Stripe Payment Link
 const PAYMENT_LINK = 'https://buy.stripe.com/8wM2a13VmeBy3v2288';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [subscription, setSubscription] = useState(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      const fetchSubscription = async () => {
-        try {
-          setLoading(true);
-          const { data, error } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', user.id)
+    const fetchSubscription = async () => {
+      if (!user) {
+        console.warn("No user available for subscription fetch");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const { data, error } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id) // fallback if UUID match works
+          .maybeSingle();
+
+        if (!data) {
+          // Try alternative match by email if needed
+          const { data: altData, error: altError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('token_identifier', user.email)
             .maybeSingle();
 
-          if (error) {
-            console.error("Error fetching subscription:", error);
-            return;
+          if (altData) {
+            const { data: subData } = await supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('user_id', altData.id)
+              .maybeSingle();
+            setSubscription(subData);
+          } else {
+            console.warn("No user ID found for this email");
+            setSubscription(null);
           }
-
+        } else {
           setSubscription(data);
-        } catch (error) {
-          console.error("Error in subscription fetch:", error);
-        } finally {
-          setLoading(false);
         }
-      };
 
-      fetchSubscription();
-    }
-  }, [user]);
+        if (error) {
+          console.error("Error fetching subscription:", error);
+        }
+      } catch (err) {
+        console.error("Error in fetchSubscription:", err);
+        toast({
+          title: "Error loading dashboard",
+          description: "Something went wrong fetching your subscription.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscription();
+  }, [user, toast]);
+
+  const isSubscriptionActive = subscription?.status === 'active';
 
   const handleSubscribe = () => {
-    // Open payment link in new tab
     window.open(PAYMENT_LINK, '_blank');
   };
 
@@ -72,8 +102,6 @@ const Dashboard = () => {
       </>
     );
   }
-
-  const isSubscriptionActive = subscription?.status === 'active';
 
   return (
     <>
@@ -97,7 +125,9 @@ const Dashboard = () => {
                   <>
                     <div className="bg-gray-50 rounded-lg p-6 space-y-4">
                       <div className="text-center">
-                        <div className="text-3xl font-bold">£4.99<span className="text-lg text-gray-600">/month</span></div>
+                        <div className="text-3xl font-bold">
+                          £4.99<span className="text-lg text-gray-600">/month</span>
+                        </div>
                         <p className="text-sm text-gray-600 mt-2">Cancel anytime</p>
                       </div>
                       <div className="space-y-3">
@@ -117,15 +147,13 @@ const Dashboard = () => {
                     </div>
                   </>
                 )}
-                <Button 
+                <Button
                   className="w-full bg-[#01FF87] hover:bg-[#00E578] text-[#37003C] h-12 text-lg"
                   onClick={isSubscriptionActive ? () => navigate('/premium') : handleSubscribe}
                 >
-                  {isSubscriptionActive ? (
-                    "Access FPL Elite Insights"
-                  ) : (
-                    "Subscribe to FPL Elite Insights Now"
-                  )}
+                  {isSubscriptionActive
+                    ? "Access FPL Elite Insights"
+                    : "Subscribe to FPL Elite Insights Now"}
                 </Button>
                 {isSubscriptionActive && (
                   <p className="text-center text-sm text-gray-600">
