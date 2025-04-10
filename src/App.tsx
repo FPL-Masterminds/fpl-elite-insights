@@ -21,17 +21,22 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkSubscription = async () => {
-      if (!user) {
+      if (!user || !user.email) {
         setSubStatus("inactive");
         return;
       }
 
-      const response = await fetch(`/.netlify/functions/check-subscription?email=${encodeURIComponent(user.email!)}`);
-      const data = await response.json();
+      try {
+        const response = await fetch(`/.netlify/functions/check-subscription?email=${encodeURIComponent(user.email)}`);
+        const data = await response.json();
 
-      if (data.active) {
-        setSubStatus("active");
-      } else {
+        if (data.active) {
+          setSubStatus("active");
+        } else {
+          setSubStatus("inactive");
+        }
+      } catch (error) {
+        console.error("Error checking subscription:", error);
         setSubStatus("inactive");
       }
     };
