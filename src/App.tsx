@@ -16,9 +16,6 @@ import { supabase } from "../supabase/supabase";
 import { Toaster } from "./components/ui/toaster";
 import ScrollToTop from "./components/ScrollToTop";
 
-// 🚨 TEMPORARY LOGOUT for debugging stuck user sessions
-supabase.auth.signOut();
-
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const [subStatus, setSubStatus] = useState<"loading" | "active" | "inactive">("loading");
