@@ -12,8 +12,12 @@ import Contact from "./components/pages/contact";
 import Privacy from "./components/pages/privacy";
 import Terms from "./components/pages/terms";
 import { AuthProvider, useAuth } from "../supabase/auth";
+import { supabase } from "../supabase/supabase";
 import { Toaster } from "./components/ui/toaster";
 import ScrollToTop from "./components/ScrollToTop";
+
+// 🚨 TEMPORARY LOGOUT for debugging stuck user sessions
+supabase.auth.signOut();
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -30,15 +34,13 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
         const response = await fetch(`/.netlify/functions/check-subscription?email=${encodeURIComponent(user.email!)}`);
         const data = await response.json();
 
-        console.log("🔍 Subscription check response:", data);
-
         if (data.active) {
           setSubStatus("active");
         } else {
           setSubStatus("inactive");
         }
-      } catch (err) {
-        console.error("❌ Error checking subscription:", err);
+      } catch (error) {
+        console.error("Subscription check error:", error);
         setSubStatus("inactive");
       }
     };
@@ -85,8 +87,22 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/success" element={<Success />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/premium" element={<PrivateRoute><Premium /></PrivateRoute>} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/premium"
+          element={
+            <PrivateRoute>
+              <Premium />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </>
   );

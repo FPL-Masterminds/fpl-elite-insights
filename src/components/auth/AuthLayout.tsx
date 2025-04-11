@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="text-center mb-8">
           <Link to="/">
             <img 
-              src="/banner_logo.png" 
+              src="banner_logo.png" 
               alt="FPL Elite Insights"
               className="h-12 mx-auto mb-4"
             />

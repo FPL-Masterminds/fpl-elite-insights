@@ -40,7 +40,7 @@ export default function Header() {
         <div className="h-16 flex items-center justify-between">
           <Link to={logoLink} className="flex items-center">
             <img 
-              src="/banner_logo.png" 
+              src="banner_logo.png" 
               alt="FPL Elite Insights"
               className="h-8 md:h-10 w-auto object-contain"
             />
