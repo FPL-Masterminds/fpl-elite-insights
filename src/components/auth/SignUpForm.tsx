@@ -23,20 +23,16 @@ export default function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(""); // Clear previous errors
 
     try {
-      const { data, error }: { data: any; error: any } = await signUp(
-        email,
-        password,
-        email.split("@")[0]
-      );
+      const { data, error }: { data: any; error: any } = await signUp(email, password, email.split("@")[0]);
 
       if (error) {
         console.error("Supabase signup error:", error);
-        setError(error.message);
+        setError(error.message || "Signup error");
         return;
       }
 
