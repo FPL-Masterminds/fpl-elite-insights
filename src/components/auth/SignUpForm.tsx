@@ -25,16 +25,27 @@ export default function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+
     try {
-      await signUp(email, password, email.split('@')[0]); // Using part of email as name
+      const { data, error } = await signUp(email, password, email.split("@")[0]);
+
+      if (error) {
+        console.error("Supabase signup error:", error);
+        setError(error.message);
+        return;
+      }
+
       toast({
         title: "Account created successfully",
-        description: "Please check your email to verify your account.",
+        description: "Redirecting to your dashboard...",
         variant: "default",
       });
-      navigate("/login");
-    } catch (error) {
-      setError("Error creating account");
+
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Unexpected signup error:", err);
+      setError(err?.message || "Unexpected error creating account");
     }
   };
 
