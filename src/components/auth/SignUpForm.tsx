@@ -28,7 +28,11 @@ export default function SignUpForm() {
     setError(""); // Clear previous errors
 
     try {
-      const { data, error } = await signUp(email, password, email.split("@")[0]);
+      const { data, error }: { data: any; error: any } = await signUp(
+        email,
+        password,
+        email.split("@")[0]
+      );
 
       if (error) {
         console.error("Supabase signup error:", error);
