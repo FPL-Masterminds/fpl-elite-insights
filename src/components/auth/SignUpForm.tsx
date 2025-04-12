@@ -28,13 +28,8 @@ export default function SignUpForm() {
     setError(""); // Clear previous errors
 
     try {
-      const { data, error }: { data: any; error: any } = await signUp(email, password, email.split("@")[0]);
-
-      if (error) {
-        console.error("Supabase signup error:", error);
-        setError(error.message || "Signup error");
-        return;
-      }
+      // Just await the function, don't expect a return
+      await signUp(email, password, email.split("@")[0]);
 
       toast({
         title: "Account created successfully",
@@ -44,8 +39,8 @@ export default function SignUpForm() {
 
       navigate("/dashboard");
     } catch (err: any) {
-      console.error("Unexpected signup error:", err);
-      setError(err?.message || "Unexpected error creating account");
+      console.error("Signup error:", err);
+      setError(err?.message || "Error creating account");
     }
   };
 
