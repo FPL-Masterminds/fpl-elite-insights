@@ -36,26 +36,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      // First create the auth user
+      const { error: signUpError, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
+      });
 
-    if (signUpError) throw signUpError;
+      if (signUpError) throw signUpError;
 
-    // After successful signup, sign them in automatically
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      // Wait a moment for the trigger to create the user record
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (signInError) throw signInError;
+      // Check if the user record was created
+      const { error: userCheckError } = await supabase
+        .from('users')
+        .select()
+        .eq('user_id', data.user?.id)
+        .single();
+
+      if (userCheckError) {
+        throw new Error('Failed to create user record');
+      }
+
+      // Now sign them in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
   };
 
   const signIn = async (email: string, password: string) => {
